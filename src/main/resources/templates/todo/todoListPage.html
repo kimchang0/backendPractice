@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo List - Light Mode</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom Styles for Light Mode -->
+  <style>
+    body {
+      background-color: #F7F9FC;
+      color: #333;
+      font-family: Arial, sans-serif;
+    }
+    .todo-container {
+      max-width: 800px;
+      margin: 50px auto;
+      background-color: #FFFFFF;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .todo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .todo-header-right {
+      display: flex;
+      gap: 10px;
+    }
+    .todo-card {
+      background-color: #E9ECEF;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+    .todo-card:hover {
+      background-color: #DEE2E6;
+    }
+    .todo-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    .todo-category {
+      font-size: 0.9rem;
+      color: #6C757D;
+    }
+    .icon-btn {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .icon-btn:hover {
+      color: #007BFF;
+    }
+    .modal-content {
+      background-color: #FFFFFF;
+      color: #333;
+    }
+    .category-filter {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .category-filter select {
+      padding: 5px;
+      border-radius: 5px;
+      border: 1px solid #CED4DA;
+    }
+  </style>
+</head>
+<body>
+
+<div class="todo-container">
+  <div class="todo-header">
+    <h1>Todo List</h1>
+    <div class="todo-header-right">
+      <button class="btn btn-primary" onclick="location.href='/logout'">로그아웃</button>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTodoModal">할 일 등록</button>
+    </div>
+  </div>
+
+  <!-- Category Filter Dropdown -->
+  <div class="category-filter">
+    <form th:action="@{/todos/filter}" method="get">
+      <select id="categoryFilter" name="category" class="form-select" onchange="this.form.submit()">
+        <option value="All">All</option>
+        <option th:each="category : ${categories}" th:value="${category.name}" th:text="${category.name}"></option>
+      </select>
+    </form>
+  </div>
+
+  <!-- Todo Card (List item) -->
+  <div id="todoList">
+    <div th:each="todo : ${todos}" class="todo-card" th:data-id="${todo.id}" th:data-title="${todo.title}" th:data-category="${todo.category.name}" th:data-description="${todo.description}">
+      <div>
+        <div class="todo-title" th:text="${todo.title}"></div>
+        <div class="todo-category" th:text="${todo.category.name}"></div>
+      </div>
+      <div>
+        <!-- Delete button -->
+        <button class="icon-btn delete-btn" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" th:data-id="${todo.id}">
+          🗑️
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Todo Modal -->
+<div class="modal fade" id="addTodoModal" tabindex="-1" aria-labelledby="addTodoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addTodoModalLabel">할 일 추가</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form th:action="@{/todos}" method="post">
+          <div class="mb-3">
+            <label for="addTitle" class="form-label">Title</label>
+            <input type="text" class="form-control" id="addTitle" name="title">
+          </div>
+          <div class="mb-3">
+            <label for="addCategory" class="form-label">Category</label>
+            <select id="addCategory" class="form-select" name="categoryId">
+              <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}"></option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="addDescription" class="form-label">Description</label>
+            <textarea class="form-control" id="addDescription" name="description"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            <button type="submit" class="btn btn-primary">추가</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Todo Modal -->
+<div class="modal fade" id="detailTodoModal" tabindex="-1" aria-labelledby="detailTodoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailTodoModalLabel">할 일 세부 정보</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="detailTitle" class="form-label">Title</label>
+          <input type="text" class="form-control" id="detailTitle" readonly>
+        </div>
+        <div class="mb-3">
+          <label for="detailCategory" class="form-label">Category</label>
+          <input type="text" class="form-control" id="detailCategory" readonly>
+        </div>
+        <div class="mb-3">
+          <label for="detailDescription" class="form-label">Description</label>
+          <textarea class="form-control" id="detailDescription" readonly></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteConfirmModalLabel">삭제 확인</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        정말로 이 항목을 삭제하시겠습니까?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+        <button id="confirmDeleteBtn" type="button" class="btn btn-danger">삭제</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript to handle form data -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const todoCards = document.querySelectorAll('.todo-card');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailCategory = document.getElementById('detailCategory');
+    const detailDescription = document.getElementById('detailDescription');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    todoCards.forEach(card => {
+      card.addEventListener('click', function () {
+        const todoTitle = card.getAttribute('data-title');
+        const todoCategory = card.getAttribute('data-category');
+        const todoDescription = card.getAttribute('data-description');
+
+        // 상세 모달에 값 설정
+        detailTitle.value = todoTitle;
+        detailCategory.value = todoCategory;
+        detailDescription.value = todoDescription;
+
+        // 상세 모달 표시
+        const detailModal = new bootstrap.Modal(document.getElementById('detailTodoModal'));
+        detailModal.show();
+      });
+    });
+
+    // 삭제 버튼
+    const deleteBtns = document.querySelectorAll('.delete-btn');
+    deleteBtns.forEach(btn => {
+      btn.addEventListener('click', function (event) {
+        event.stopPropagation();  // 부모 요소로의 이벤트 전파 방지
+        const todoId = btn.getAttribute('data-id');
+        confirmDeleteBtn.addEventListener('click', function () {
+          window.location.href = '/todos/delete/' + todoId;
+        });
+      });
+    });
+  });
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
